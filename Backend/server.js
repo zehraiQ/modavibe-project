@@ -23,7 +23,41 @@ app.use(cors());
 app.use(express.json());
 
 // تقديم ملفات الفرونت إند (مهم جداً عند النشر)
-app.use(express.static(path.join(__dirname, '../frontend')));
+// ==========================================
+// 🔴 إصلاح مسار الفرونت إند (Front-end Path Fix)
+// ==========================================
+
+// تحديد مسار مجلد الفرونت إند (نرجع خطوة للخلف ثم ندخل لـ Frontend)
+// ملاحظة: تأكدنا أن الاسم يبدأ بحرف F كبير كما في GitHub
+const frontendPath = path.join(__dirname, '../Frontend');
+
+console.log("📂 Server is looking for frontend at:", frontendPath);
+
+// أمر تقديم الملفات (CSS, JS, Images)
+app.use(express.static(frontendPath));
+
+// أمر خاص للصفحة الرئيسية (لحل مشكلة Cannot GET /)
+app.get('/', (req, res) => {
+    const indexPath = path.join(frontendPath, 'index.html');
+    
+    // التحقق: هل ملف index.html موجود فعلاً؟
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        // إذا لم يجده، سيطبع لنا مكان البحث لنعرف الخطأ
+        res.status(404).send(`
+            <div style="font-family: sans-serif; text-align: center; padding: 50px;">
+                <h1 style="color: red;">⚠️ خطأ: ملف الموقع غير موجود</h1>
+                <p>السيرفر يعمل، لكنه لم يجد ملف <b>index.html</b></p>
+                <hr>
+                <p><b>المسار الذي بحث فيه السيرفر:</b><br> ${indexPath}</p>
+                <p><b>المسار الحالي للسيرفر:</b><br> ${__dirname}</p>
+                <hr>
+                <p>تأكد أن اسم المجلد في GitHub هو <b>Frontend</b> (بحرف F كبير)</p>
+            </div>
+        `);
+    }
+});
 
 // --- إعدادات رفع الصور ---
 const uploadDir = path.join(__dirname, 'uploads');
