@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetim Paneli - ModaVibe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-uppercase mb-0">YÖNETİM PANELİ</h2>
+                <small class="text-muted">Admin Kontrol Merkezi</small>
+            </div>
+            <a href="index.html" class="btn btn-outline-dark rounded-0 px-4">MAĞAZAYA GİT <i class="fas fa-external-link-alt ms-2"></i></a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card p-4 border-0 shadow-sm sticky-top" style="top: 20px;">
+                    <h5 class="mb-4 fw-bold border-bottom pb-2">ÜRÜN İŞLEMLERİ</h5>
+                    
+                    <form onsubmit="handleProductSubmit(event)">
+                        <input type="hidden" id="p-id"> <div class="mb-3">
+                            <label class="small text-muted fw-bold">ÜRÜN ADI (TÜRKÇE)</label>
+                            <input type="text" id="p-tr" class="form-control" placeholder="Örn: Siyah Yazlık Elbise" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold">FİYAT (TL)</label>
+                            <input type="number" id="p-price" class="form-control" placeholder="0.00" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold">GÖRSEL YÜKLE</label>
+                            <input type="file" id="p-img" class="form-control" accept="image/*">
+                            <small class="text-danger" id="img-hint" style="display:none; font-size:11px;">* Değiştirmek istemiyorsanız boş bırakın</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="small text-muted fw-bold">KATEGORİ SEÇ</label>
+                            <select id="p-cat" class="form-select">
+                                <option value="YENİ">YENİ GELENLER (New Arrivals)</option>
+                                <option value="ELBİSE">ELBİSE (Dresses)</option>
+                                <option value="ÜST GİYİM">ÜST GİYİM (Tops)</option>
+                                <option value="ALT GİYİM">ALT GİYİM (Bottoms)</option>
+                                <option value="DIŞ GİYİM">DIŞ GİYİM (Outerwear)</option>
+                                <option value="TAKIM">TAKIM (Sets)</option>
+                                <option value="AKSESUAR">AKSESUAR (Accessories)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" id="submit-btn" class="btn btn-dark-custom w-100">KAYDET</button>
+                        <button type="button" id="cancel-btn" class="btn btn-secondary w-100 mt-2 rounded-0 d-none" onclick="resetForm()">İPTAL</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card p-4 border-0 shadow-sm">
+                    <h5 class="mb-4 fw-bold border-bottom pb-2">STOK LİSTESİ</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover">
+                            <thead class="table-light">
+                                <tr class="text-uppercase small">
+                                    <th width="80">Görsel</th>
+                                    <th>Ürün Adı</th>
+                                    <th>Kategori</th>
+                                    <th>Fiyat</th>
+                                    <th class="text-end">İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+
+    <script>
+        // التحقق من أن المستخدم أدمن
+        const user = JSON.parse(localStorage.getItem('user'));
+        // ملاحظة: للتجربة السهلة يمكنك إيقاف السطر التالي مؤقتاً، لكن للمشروع النهائي يجب تفعيله
+        if(!user || user.role !== 'admin') { 
+             alert("Bu sayfaya erişim yetkiniz yok! (Access Denied)"); 
+             window.location.href = 'index.html'; 
+        }
+
+        let allProducts = [];
+
+        // عند تحميل الصفحة، اجلب المنتجات
+        document.addEventListener('DOMContentLoaded', loadProducts);
+
+        // دالة جلب المنتجات من السيرفر
+        async function loadProducts() {
+            const res = await apiRequest('/products');
+            const tbody = document.getElementById('products-table');
+            
+            if(res.data) {
+                allProducts = res.data;
+                tbody.innerHTML = res.data.map(p => `
+                    <tr>
+                        <td>
+                            <img src="${p.image}" width="60" height="80" class="object-fit-cover border" onerror="this.src='https://via.placeholder.com/60x80?text=No+Img'">
+                        </td>
+                        <td class="fw-bold text-dark">${p.name_tr}</td>
+                        <td><span class="badge bg-black rounded-0 fw-normal">${p.category}</span></td>
+                        <td class="fw-bold">${p.price} TL</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-dark rounded-0 me-1" onclick="editProduct(${p.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger rounded-0" onclick="deleteProduct(${p.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // دالة إضافة أو تعديل منتج
+        async function handleProductSubmit(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('p-id').value;
+            const isEdit = id ? true : false;
+            
+            // نستخدم FormData لأننا نرفع ملف صورة
+            const formData = new FormData();
+            formData.append('name_tr', document.getElementById('p-tr').value);
+            formData.append('price', document.getElementById('p-price').value);
+            formData.append('category', document.getElementById('p-cat').value);
+            
+            const imageFile = document.getElementById('p-img').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            const url = isEdit ? `/api/products/${id}` : '/api/products';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                // نرسل الطلب مباشرة (Fetch) لأن app.js قد لا يدعم FormData في دالة apiRequest البسيطة
+                const res = await fetch(url, { method: method, body: formData });
+                const result = await res.json();
+
+                if(res.ok) {
+                    alert(isEdit ? "Ürün güncellendi!" : "Ürün başarıyla eklendi!");
+                    resetForm();
+                    loadProducts();
+                } else {
+                    alert("Hata: " + result.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Sunucu hatası!");
+            }
+        }
+
+        // دالة ملء النموذج عند التعديل
+        function editProduct(id) {
+            const product = allProducts.find(p => p.id == id);
+            if(!product) return;
+
+            document.getElementById('p-id').value = product.id;
+            document.getElementById('p-tr').value = product.name_tr;
+            document.getElementById('p-price').value = product.price;
+            document.getElementById('p-cat').value = product.category;
+
+            document.getElementById('submit-btn').innerText = "GÜNCELLE";
+            document.getElementById('cancel-btn').classList.remove('d-none');
+            document.getElementById('img-hint').style.display = 'block';
+            
+            // الصعود لأعلى الصفحة
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // دالة الحذف
+        async function deleteProduct(id) {
+            if(!confirm("Bu ürünü silmek istediğinize emin misiniz? (Are you sure?)")) return;
+
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadProducts(); 
+            } else {
+                alert("Silme işlemi başarısız!");
+            }
+        }
+
+        // تنظيف النموذج
+        function resetForm() {
+            document.querySelector('form').reset();
+            document.getElementById('p-id').value = "";
+            document.getElementById('submit-btn').innerText = "KAYDET";
+            document.getElementById('cancel-btn').classList.add('d-none');
+            document.getElementById('img-hint').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

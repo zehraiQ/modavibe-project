@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ürün Detayı - ModaVibe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg border-bottom">
+        <div class="container px-4">
+            <a class="navbar-brand" href="index.html">MODAVIBE</a>
+            <div class="ms-auto">
+                <a href="cart.html" class="text-dark fs-5"><i class="fas fa-shopping-bag"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <a href="index.html" class="text-decoration-none text-muted mb-4 d-inline-block">
+            <i class="fas fa-arrow-left me-2"></i> ALIŞVERİŞE DEVAM ET
+        </a>
+
+        <div class="row gx-5">
+            <div class="col-md-6 mb-4">
+                <img id="p-img" src="" class="w-100 object-fit-cover shadow-sm" style="min-height: 500px; max-height: 700px;" alt="Ürün Resmi">
+            </div>
+
+            <div class="col-md-6">
+                <h2 id="p-name" class="fw-bold text-uppercase mb-3 display-6">...</h2>
+                <div class="fs-4 fw-bold mb-4" id="p-price">... TL</div>
+                
+                <hr>
+
+                <div class="mb-4">
+                    <label class="fw-bold small mb-2">BEDEN SEÇİN</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-dark rounded-0 px-3">S</button>
+                        <button class="btn btn-outline-dark rounded-0 px-3">M</button>
+                        <button class="btn btn-outline-dark rounded-0 px-3">L</button>
+                        <button class="btn btn-outline-dark rounded-0 px-3">XL</button>
+                    </div>
+                </div>
+
+                <button onclick="addToCartCurrent()" class="btn btn-dark-custom btn-lg w-100 py-3 mb-3">
+                    SEPETE EKLE
+                </button>
+
+                <div class="accordion mt-4" id="accordionExample">
+                    <div class="accordion-item rounded-0 border-start-0 border-end-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed shadow-none bg-white text-dark fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                ÜRÜN ÖZELLİKLERİ
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse">
+                            <div class="accordion-body small text-muted">
+                                %100 Pamuklu kumaştan üretilmiştir. Türkiye'de üretilmiştir.
+                                Manken Ölçüleri: Boy: 1.76, Göğüs: 85, Bel: 62, Basen: 90.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // جلب معرف المنتج من الرابط (URL)
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if(!productId) window.location.href = 'index.html';
+            
+            // جلب كل المنتجات والبحث عن المنتج المطلوب
+            // (في المشاريع الكبيرة نجلب منتجاً واحداً من السيرفر، لكن هنا للتبسيط)
+            const res = await apiRequest('/products');
+            if(res.data) {
+                const product = res.data.find(p => p.id == productId);
+                if(product) {
+                    document.getElementById('p-img').src = product.image;
+                    document.getElementById('p-name').innerText = product.name_tr;
+                    document.getElementById('p-price').innerText = product.price + " TL";
+                    document.title = product.name_tr + " - ModaVibe";
+                }
+            }
+        });
+
+        async function addToCartCurrent() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if(!user) {
+                if(confirm("Lütfen önce giriş yapınız.")) window.location.href = 'login.html';
+                return;
+            }
+            await apiRequest('/cart', 'POST', { user_id: user.id, product_id: productId });
+            alert("Ürün başarıyla sepete eklendi!");
+        }
+    </script>
+</body>
+</html>

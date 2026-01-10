@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ödeme Yap - ModaVibe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow border-0">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h4 class="mb-0 fw-bold"><i class="fas fa-credit-card me-2"></i> Güvenli Ödeme</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        
+                        <form id="payment-form" onsubmit="processPayment(event)">
+                            <h5 class="fw-bold mb-3">Teslimat Adresi</h5>
+                            <div class="mb-4">
+                                <textarea id="address" class="form-control" rows="2" required readonly></textarea>
+                                <small class="text-muted">Profilinizdeki adres kullanılacaktır.</small>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h5 class="fw-bold mb-3">Kart Bilgileri</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">KART ÜZERİNDEKİ İSİM</label>
+                                <input type="text" class="form-control" placeholder="AD SOYAD" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">KART NUMARASI</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="far fa-credit-card"></i></span>
+                                    <input type="text" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold">SON KULLANMA (AY/YIL)</label>
+                                    <input type="text" class="form-control" placeholder="MM/YY" maxlength="5" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold">CVV</label>
+                                    <input type="text" class="form-control" placeholder="123" maxlength="3" required>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-4 small">
+                                <i class="fas fa-lock me-2"></i> Ödemeniz 256-bit SSL ile korunmaktadır.
+                            </div>
+
+                            <button type="submit" id="pay-btn" class="btn btn-success w-100 py-3 fw-bold fs-5 shadow-sm">
+                                ÖDEMEYİ TAMAMLA
+                            </button>
+                            <a href="cart.html" class="btn btn-link text-muted w-100 mt-2">İptal Et ve Geri Dön</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // تحميل عنوان المستخدم تلقائياً
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if(!user) window.location.href = 'login.html';
+            document.getElementById('address').value = user.address || "Adres bilgisi yok.";
+        });
+
+        async function processPayment(e) {
+            e.preventDefault();
+            const btn = document.getElementById('pay-btn');
+            
+            // محاكاة التحميل
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> İşleniyor...';
+            btn.disabled = true;
+
+            // انتظار ثانيتين ليبدو حقيقياً
+            await new Promise(r => setTimeout(r, 2000));
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            // إرسال الطلب للسيرفر
+            const res = await apiRequest('/checkout', 'POST', {
+                user_id: user.id,
+                address: document.getElementById('address').value,
+                card_info: "simulated"
+            });
+
+            if(res.message) {
+                // نجاح!
+                document.body.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center vh-100 bg-light">
+                        <div class="text-center">
+                            <i class="fas fa-check-circle text-success display-1 mb-3"></i>
+                            <h2 class="fw-bold">Siparişiniz Alındı!</h2>
+                            <p class="lead text-muted">Teşekkürler, ödemeniz başarıyla gerçekleşti.</p>
+                            <a href="orders.html" class="btn btn-dark mt-3">Siparişlerime Git</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                alert("Hata: " + res.error);
+                btn.innerHTML = 'ÖDEMEYİ TAMAMLA';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+/* * Project: ModaVibe (Turkish Pro Version)
+ * File: frontend/css/style.css
+ */
+
+/* استيراد خط 'Manrope' العصري جداً للموضة */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --primary-color: #000000; /* أسود حالك */
+    --secondary-color: #333333;
+    --bg-light: #ffffff;
+    --border-color: #e5e5e5;
+    --font-main: 'Manrope', sans-serif;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: #fff;
+    color: var(--primary-color);
+    overflow-x: hidden; /* لمنع ظهور شريط تمرير أفقي */
+}
+
+/* --- 1. الشريط العلوي (Top Bar) --- */
+.top-bar {
+    background-color: #000;
+    color: #fff;
+    font-size: 11px;
+    padding: 8px 0;
+    text-align: center;
+    letter-spacing: 1.5px; /* تباعد الأحرف ليعطي فخامة */
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* --- 2. القائمة (Navbar) --- */
+.navbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 0;
+}
+
+.navbar-brand {
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    color: #000 !important;
+}
+
+.nav-link {
+    color: #000 !important;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 12px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s;
+}
+
+/* تأثير الخط الذي يظهر تحت الرابط عند المرور عليه */
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    bottom: 0;
+    left: 0;
+    background-color: #000;
+    transition: width 0.3s;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+.nav-link.text-danger {
+    color: #d32f2f !important; /* لون أحمر للتخفيضات */
+}
+
+/* --- 3. الكروت والمنتجات (Product Cards) --- */
+.card {
+    border: none;
+    border-radius: 0; /* حواف حادة تماماً */
+    background: transparent;
+}
+
+.card-img-wrapper {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3 / 4; /* نسبة أبعاد الصور (طولية) */
+}
+
+.card-img-top {
+    border-radius: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* لملء المساحة دون مط الصورة */
+    transition: transform 0.5s ease;
+}
+
+/* تكبير الصورة قليلاً عند وضع الماوس */
+.card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.card-body {
+    padding: 15px 0;
+    text-align: left;
+}
+
+.card-title {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+.price-text {
+    font-size: 15px;
+    font-weight: 800;
+    color: #000;
+}
+
+/* --- 4. الأزرار (Buttons) --- */
+.btn-dark-custom {
+    background-color: #000;
+    color: #fff;
+    border-radius: 0; /* زر مربع */
+    padding: 12px 20px;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border: 1px solid #000;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+.btn-dark-custom:hover {
+    background-color: #fff;
+    color: #000;
+}
+
+.btn-outline-dark {
+    border-radius: 0;
+    border-color: #000;
+    color: #000;
+}
+
+.btn-outline-dark:hover {
+    background-color: #000;
+    color: #fff;
+}
+
+/* --- 5. لوحة التحكم (Admin & Forms) --- */
+.form-control, .form-select {
+    border-radius: 0;
+    border: 1px solid #ccc;
+    padding: 12px;
+    font-size: 14px;
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: none;
+    border-color: #000;
+}
+
+/* تنسيق جدول المنتجات */
+.table thead th {
+    font-size: 11px;
+    letter-spacing: 1px;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #000;
+    padding: 15px;
+}
+
+/* --- 6. الفوتر (Footer) --- */
+footer {
+    font-size: 13px;
+}
+footer h4 {
+    letter-spacing: -1px;
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hesabım - ModaVibe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg bg-white border-bottom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">MODAVIBE</a>
+            <a href="index.html" class="btn btn-outline-dark rounded-0 btn-sm">MAĞAZAYA DÖN</a>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                        <h4 class="fw-bold m-0">HESABIM</h4>
+                        <button onclick="logout()" class="btn btn-danger btn-sm rounded-0">ÇIKIŞ YAP <i class="fas fa-sign-out-alt ms-1"></i></button>
+                    </div>
+
+                    <form onsubmit="updateProfile(event)">
+                        <div class="mb-3">
+                            <label class="fw-bold small text-muted">AD SOYAD</label>
+                            <input type="text" id="p-name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold small text-muted">TELEFON</label>
+                            <input type="text" id="p-phone" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold small text-muted">ADRES</label>
+                            <textarea id="p-addr" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="fw-bold small text-muted">E-POSTA (Değiştirilemez)</label>
+                            <input type="email" id="p-email" class="form-control bg-light" disabled>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark-custom w-100">BİLGİLERİ GÜNCELLE</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if(!user) window.location.href = 'login.html';
+
+        // ملء البيانات
+        document.getElementById('p-name').value = user.name || "";
+        document.getElementById('p-phone').value = user.phone || "";
+        document.getElementById('p-addr').value = user.address || "";
+        document.getElementById('p-email').value = user.email || "";
+
+        async function updateProfile(e) {
+            e.preventDefault();
+            const updatedData = {
+                name: document.getElementById('p-name').value,
+                phone: document.getElementById('p-phone').value,
+                address: document.getElementById('p-addr').value
+            };
+
+            const res = await fetch(`/api/users/${user.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+
+            if(res.ok) {
+                // تحديث البيانات في LocalStorage
+                const newUser = { ...user, ...updatedData };
+                localStorage.setItem('user', JSON.stringify(newUser));
+                alert("Bilgileriniz güncellendi!");
+            } else {
+                alert("Hata oluştu.");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
