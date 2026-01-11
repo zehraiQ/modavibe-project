@@ -23,7 +23,7 @@
                 <div class="card border-0 shadow-sm p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                         <h4 class="fw-bold m-0">HESABIM</h4>
-                        <button onclick="logout()" class="btn btn-danger btn-sm rounded-0">ÇIKIŞ YAP <i class="fas fa-sign-out-alt ms-1"></i></button>
+                        <button onclick="logout()" class="btn btn-secondary btn-sm rounded-0">ÇIKIŞ YAP <i class="fas fa-sign-out-alt ms-1"></i></button>
                     </div>
 
                     <form onsubmit="updateProfile(event)">
@@ -44,9 +44,17 @@
                             <input type="email" id="p-email" class="form-control bg-light" disabled>
                         </div>
 
-                        <button type="submit" class="btn btn-dark-custom w-100">BİLGİLERİ GÜNCELLE</button>
+                        <button type="submit" class="btn btn-dark w-100">BİLGİLERİ GÜNCELLE</button>
                     </form>
-                </div>
+
+                    <hr class="my-4">
+                    <div class="text-center">
+                         <button onclick="deleteAccount()" class="btn btn-outline-danger btn-sm w-100">
+                            <i class="fas fa-trash-alt me-2"></i> HESABIMI SİL
+                        </button>
+                        <small class="text-muted mt-2 d-block" style="font-size: 11px;">Bu işlem geri alınamaz.</small>
+                    </div>
+                    </div>
             </div>
         </div>
     </div>
@@ -69,7 +77,7 @@
                 phone: document.getElementById('p-phone').value,
                 address: document.getElementById('p-addr').value
             };
-
+            
             const res = await fetch(`/api/users/${user.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -83,6 +91,24 @@
                 alert("Bilgileriniz güncellendi!");
             } else {
                 alert("Hata oluştu.");
+            }
+        }
+
+        // 🔥 دالة الحذف المضافة 🔥
+        async function deleteAccount() {
+            if(confirm("Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz! (هل أنت متأكد؟)")) {
+                
+                // إرسال طلب الحذف للسيرفر
+                const res = await fetch(`/api/users/${user.id}`, {
+                    method: 'DELETE'
+                });
+
+                if(res.ok) {
+                    alert("Hesabınız silindi.");
+                    logout(); // تسجيل خروج تلقائي
+                } else {
+                    alert("Silme işlemi başarısız oldu.");
+                }
             }
         }
 

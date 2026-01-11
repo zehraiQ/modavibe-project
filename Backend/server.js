@@ -87,17 +87,18 @@ const db = new sqlite3.Database('./shop.db', (err) => {
 
 db.serialize(() => {
     // إنشاء الجداول
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        email TEXT UNIQUE,
-        phone TEXT,
-        address TEXT,
-        password TEXT,
-        role TEXT DEFAULT 'user',
-        is_verified INTEGER DEFAULT 0,
-        verification_code TEXT
-    )`);
+// استبدل كود إنشاء جدول users بهذا:
+db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    email TEXT UNIQUE,
+    phone TEXT,
+    address TEXT,
+    password TEXT,
+    role TEXT DEFAULT 'user',
+    is_verified INTEGER DEFAULT 0,  
+    verification_code TEXT          
+)`);
     
     db.run(`CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -191,38 +192,70 @@ app.delete('/api/products/:id', (req, res) => {
 });
 
 // 2. التسجيل والتوثيق
-app.post('/api/register', (req, res) => {
-    const { name, email, phone, address, password } = req.body;
-    if(!email || !password || !name) return res.status(400).json({ error: "Eksik bilgi!" });
+// 1. كود التسجيل (معدل لإرسال الكود)
+app.post('/api/register', async (req, res) => {
+    const { name, email, password, phone, address } = req.body;
+
+    if (!email.endsWith('@gmail.com')) {
+        return res.status(400).json({ error: "Lütfen geçerli bir Gmail adresi giriniz (@gmail.com)" });
+    }
 
     db.get("SELECT * FROM users WHERE email = ?", [email], async (err, row) => {
-        if (row) return res.status(400).json({ error: "Bu e-posta zaten kayıtlı!" });
+        if (row) {
+            if(row.is_verified === 1) return res.status(400).json({ error: "Bu e-posta zaten kayıtlı!" });
+            db.run("DELETE FROM users WHERE email = ?", [email]); // حذف غير المفعل لإعادة التسجيل
+        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-        const stmt = db.prepare("INSERT INTO users (name, email, phone, address, password, verification_code) VALUES (?, ?, ?, ?, ?, ?)");
+        const stmt = db.prepare("INSERT INTO users (name, email, phone, address, password, is_verified, verification_code) VALUES (?, ?, ?, ?, ?, 0, ?)");
         stmt.run(name, email, phone, address, hashedPassword, code, function(err) {
             if (err) return res.status(500).json({ error: err.message });
 
             // إرسال الإيميل
             const mailOptions = {
-                from: '"ModaVibe Security" <' + process.env.EMAIL_USER + '>',
+                from: process.env.EMAIL_USER,
                 to: email,
                 subject: 'ModaVibe Doğrulama Kodu',
-                text: `Merhaba ${name},\n\nHesabınızı doğrulamak için kodunuz: ${code}`
+                text: `Merhaba ${name},\n\nKodunuz: ${code}`
             };
 
-            transporter.sendMail(mailOptions, (error, info) => {
+            transporter.sendMail(mailOptions, (error) => {
                 if (error) {
-                    console.log("Email Error:", error);
-                    // حذف المستخدم إذا فشل الإرسال ليحاول مرة أخرى
-                    db.run("DELETE FROM users WHERE email = ?", [email]);
-                    return res.status(500).json({ error: "E-posta gönderilemedi." });
+                    console.log(error);
+                    return res.status(500).json({ error: "Email gönderilemedi." });
                 }
-                res.json({ message: "Kayıt Başarılı! Kod gönderildi." });
+                res.json({ message: "Kod gönderildi.", email: email });
             });
         });
+    });
+});
+
+// 2. كود التحقق الجديد (ضيفه تحت التسجيل)
+app.post('/api/verify', (req, res) => {
+    const { email, code } = req.body;
+    db.get("SELECT * FROM users WHERE email = ? AND verification_code = ?", [email, code], (err, row) => {
+        if (!row) return res.status(400).json({ error: "Hatalı Kod!" });
+        db.run("UPDATE users SET is_verified = 1, verification_code = NULL WHERE id = ?", [row.id], () => {
+            res.json({ message: "Hesap doğrulandı!" });
+        });
+    });
+});
+
+// 3. كود تسجيل الدخول (معدل لفحص التفعيل)
+app.post('/api/login', (req, res) => {
+    const { email, password } = req.body;
+    db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
+        if (!user) return res.status(400).json({ error: "Kullanıcı bulunamadı." });
+        
+        // الشرط الجديد: هل الحساب مفعل؟
+        if (user.is_verified === 0) return res.status(400).json({ error: "Lütfen önce e-posta adresinizi doğrulayın." });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ error: "Şifre hatalı." });
+
+        res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     });
 });
 
