@@ -4,7 +4,9 @@
 
 // 1. استدعاء مكتبة التشفير (يجب أن يكون أول سطر)
 require('dotenv').config(); 
-
+const dns = require('dns');
+// إجبار السيرفر على استخدام IPv4 (حل سحري لمشاكل الاتصال في Render)
+dns.setDefaultResultOrder('ipv4first');
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
@@ -137,16 +139,21 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 });
 
 // --- إعداد الإيميل (الآمن) ---
+// إعدادات الإيميل المحسنة (Anti-Timeout)
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',  // نحدد سيرفر جوجل
-    port: 587,               // ✅ هذا هو الحل: المنفذ السريع والمسموح به
-    secure: false,           // ضروري جداً مع المنفذ 587
+    host: 'smtp.gmail.com',
+    port: 465, // سنعود لمنفذ 465 مع تفعيل الأمان، غالباً يكون أثبت مع IPv4
+    secure: true, 
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
+    // زيادة مهلة الانتظار حتى لا يفصل بسرعة
+    connectionTimeout: 10000, // 10 ثواني
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
     tls: {
-        rejectUnauthorized: false // يمنع مشاكل الشهادات الأمنية في Render
+        rejectUnauthorized: false
     }
 });
 
