@@ -143,14 +143,15 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 // --- إعداد الإيميل (الآمن) ---
 // إعدادات الإيميل المحسنة (Anti-Timeout)
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // استخدمنا الاختصار كما تحبين
+    host: 'smtp.gmail.com', // حددنا سيرفر جوجل
+    port: 587,              // هذا المنفذ لا يحظره Render
+    secure: false,          // ضروري مع 587
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    // هذه الإضافة الوحيدة الضرورية ليعمل على السيرفر
     tls: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false // الرخصة اللي ضفناها قبل قليل
     }
 });
 
