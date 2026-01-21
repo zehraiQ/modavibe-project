@@ -20,8 +20,6 @@ const fs = require('fs');
 const multer = require('multer');
 
 const app = express();
-// استخدام المنفذ من البيئة (مهم للنشر) أو 3000 محلياً
-const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -141,25 +139,13 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 });
 
 // --- إعداد الإيميل (الآمن) ---
-// إعدادات الإيميل المحسنة (Anti-Timeout)
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // ضروري جداً مع 587
+    service: 'gmail', // في Koyeb هذا السطر يعمل عادةً بدون مشاكل
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false,
-        ciphers: 'SSLv3' // 👈 إضافة لتقوية الاتصال
-    },
-    // 👇 إعدادات الصبر (تمنع الخطأ السريع)
-    connectionTimeout: 20000, // ننتظر 20 ثانية
-    greetingTimeout: 20000,   // ننتظر الترحيب من جوجل
-    socketTimeout: 20000      // ننتظر نقل البيانات
+    }
 });
-
 // ================== APIs ==================
 
 // 1. المنتجات
@@ -397,6 +383,10 @@ app.delete('/api/users/:id', (req, res) => {
     });
 });
 // تشغيل السيرفر
+// ==========================================
+// تشغيل السيرفر (دائماً في نهاية الملف)
+// ==========================================
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+   console.log(`Server is running on port ${PORT}`);
 });
