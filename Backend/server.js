@@ -143,16 +143,21 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 // --- إعداد الإيميل (الآمن) ---
 // إعدادات الإيميل المحسنة (Anti-Timeout)
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // حددنا سيرفر جوجل
-    port: 587,              // هذا المنفذ لا يحظره Render
-    secure: false,          // ضروري مع 587
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // ضروري جداً مع 587
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
     tls: {
-        rejectUnauthorized: false // الرخصة اللي ضفناها قبل قليل
-    }
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3' // 👈 إضافة لتقوية الاتصال
+    },
+    // 👇 إعدادات الصبر (تمنع الخطأ السريع)
+    connectionTimeout: 20000, // ننتظر 20 ثانية
+    greetingTimeout: 20000,   // ننتظر الترحيب من جوجل
+    socketTimeout: 20000      // ننتظر نقل البيانات
 });
 
 // ================== APIs ==================
