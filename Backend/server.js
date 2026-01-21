@@ -138,11 +138,15 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 
 // --- إعداد الإيميل (الآمن) ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',  // نحدد سيرفر جوجل
+    port: 587,               // ✅ هذا هو الحل: المنفذ السريع والمسموح به
+    secure: false,           // ضروري جداً مع المنفذ 587
     auth: {
-        // يقرأ البيانات من ملف .env المخفي
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false // يمنع مشاكل الشهادات الأمنية في Render
     }
 });
 
@@ -363,6 +367,23 @@ app.get('/api/orders/:uid', (req, res) => {
     db.all("SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC", [req.params.uid], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ data: rows });
+    });
+});
+// === API: حذف حساب المستخدم (Delete User) ===
+app.delete('/api/users/:id', (req, res) => {
+    const id = req.params.id;
+    
+    // 1. حذف سلة التسوق الخاصة بالمستخدم أولاً (تنظيف)
+    db.run("DELETE FROM cart WHERE user_id = ?", [id], (err) => {
+        if (err) console.log(err); // مجرد تسجيل للخطأ إن وجد
+        
+        // 2. حذف المستخدم نفسه
+        db.run("DELETE FROM users WHERE id = ?", [id], function(err) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            res.json({ message: "Hesap başarıyla silindi." });
+        });
     });
 });
 // تشغيل السيرفر
